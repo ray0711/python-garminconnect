@@ -5,30 +5,28 @@ $ ./example.py
 
 *** Garmin Connect API Demo by cyberjunky ***
 
-Trying to login to Garmin Connect using token data from '~/.garminconnect'...
-
 1 -- Get full name
 2 -- Get unit system
-3 -- Get activity data for '2023-10-01'
-4 -- Get activity data for '2023-10-01' (compatible with garminconnect-ha)
-5 -- Get body composition data for '2023-10-01' (compatible with garminconnect-ha)
-6 -- Get body composition data for from '2023-09-24' to '2023-10-01' (to be compatible with garminconnect-ha)
-7 -- Get stats and body composition data for '2023-10-01'
-8 -- Get steps data for '2023-10-01'
-9 -- Get heart rate data for '2023-10-01'
-0 -- Get training readiness data for '2023-10-01'
-- -- Get daily step data for '2023-09-24' to '2023-10-01'
-/ -- Get body battery data for '2023-09-24' to '2023-10-01'
-! -- Get floors data for '2023-09-24'
-? -- Get blood pressure data for '2023-09-24' to '2023-10-01'
-. -- Get training status data for '2023-10-01'
-a -- Get resting heart rate data for 2023-10-01'
-b -- Get hydration data for '2023-10-01'
-c -- Get sleep data for '2023-10-01'
-d -- Get stress data for '2023-10-01'
-e -- Get respiration data for '2023-10-01'
-f -- Get SpO2 data for '2023-10-01'
-g -- Get max metric data (like vo2MaxValue and fitnessAge) for '2023-10-01'
+3 -- Get activity data for '2023-11-21'
+4 -- Get activity data for '2023-11-21' (compatible with garminconnect-ha)
+5 -- Get body composition data for '2023-11-21' (compatible with garminconnect-ha)
+6 -- Get body composition data for from '2023-11-14' to '2023-11-21' (to be compatible with garminconnect-ha)
+7 -- Get stats and body composition data for '2023-11-21'
+8 -- Get steps data for '2023-11-21'
+9 -- Get heart rate data for '2023-11-21'
+0 -- Get training readiness data for '2023-11-21'
+- -- Get daily step data for '2023-11-14' to '2023-11-21'
+/ -- Get body battery data for '2023-11-14' to '2023-11-21'
+! -- Get floors data for '2023-11-14'
+? -- Get blood pressure data for '2023-11-14' to '2023-11-21'
+. -- Get training status data for '2023-11-21'
+a -- Get resting heart rate data for 2023-11-21'
+b -- Get hydration data for '2023-11-21'
+c -- Get sleep data for '2023-11-21'
+d -- Get stress data for '2023-11-21'
+e -- Get respiration data for '2023-11-21'
+f -- Get SpO2 data for '2023-11-21'
+g -- Get max metric data (like vo2MaxValue and fitnessAge) for '2023-11-21'
 h -- Get personal record for user
 i -- Get earned badges for user
 j -- Get adhoc challenges data from start '0' and limit '100'
@@ -37,7 +35,7 @@ l -- Get badge challenges data from '1' and limit '100'
 m -- Get non completed badge challenges data from '1' and limit '100'
 n -- Get activities data from start '0' and limit '100'
 o -- Get last activity
-p -- Download activities data by date from '2023-09-24' to '2023-10-01'
+p -- Download activities data by date from '2023-11-14' to '2023-11-21'
 r -- Get all kinds of activities data from '0'
 s -- Upload activity data from file 'MY_ACTIVITY.fit'
 t -- Get all kinds of Garmin device info
@@ -45,19 +43,23 @@ u -- Get active goals
 v -- Get future goals
 w -- Get past goals
 y -- Get all Garmin device alarms
-x -- Get Heart Rate Variability data (HRV) for '2023-10-01'
-z -- Get progress summary from '2023-09-24' to '2023-10-01' for all metrics
+x -- Get Heart Rate Variability data (HRV) for '2023-11-21'
+z -- Get progress summary from '2023-11-14' to '2023-11-21' for all metrics
 A -- Get gear, the defaults, activity types and statistics
-B -- Get weight-ins from '2023-09-24' to '2023-10-01'
-C -- Get daily weigh-ins for '2023-10-01'
-D -- Delete all weigh-ins for '2023-10-01'
-E -- Add a weigh-in of 89.6kg on '2023-10-01'
-F -- Get virtual challenges/expeditions from '2023-09-24' to '2023-10-01'
-G -- Get hill score data from '2023-09-24' to '2023-10-01'
-H -- Get endurance score data from '2023-09-24' to '2023-10-01'
-I -- Get activities for date '2023-10-01'
+B -- Get weight-ins from '2023-11-14' to '2023-11-21'
+C -- Get daily weigh-ins for '2023-11-21'
+D -- Delete all weigh-ins for '2023-11-21'
+E -- Add a weigh-in of 89.6kg on '2023-11-21'
+F -- Get virtual challenges/expeditions from '2023-11-14' to '2023-11-21'
+G -- Get hill score data from '2023-11-14' to '2023-11-21'
+H -- Get endurance score data from '2023-11-14' to '2023-11-21'
+I -- Get activities for date '2023-11-21'
 J -- Get race predictions
-K -- Get all day stress data for '2023-10-01'
+K -- Get all day stress data for '2023-11-21'
+L -- Add body composition for '2023-11-21'
+M -- Set blood pressure '120,80,80,notes='Testing with example.py'
+N -- Get user profile/settings
+O -- Reload epoch data for 2023-11-21
 Z -- Remove stored login tokens (logout)
 q -- Exit
 Make your selection: 
@@ -65,7 +67,7 @@ Make your selection:
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/cyberjunkynl/)
 
-Python 3 API wrapper for Garmin Connect to get your statistics.
+Python 3 API wrapper for Garmin Connect.
 
 ## NOTE: For developers using this package
 From `version 0.2.1 onwards`, this package uses `garth` to authenticate and perform API calls.  
@@ -104,15 +106,21 @@ make test
 
 ## Development
 
-To create a development enviroment to commit code.
+To create a development environment to commit code.
 
 ```
-sudo apt install pdm
-snap install ruff
+pip3 install pdm
+pip3 install ruff
 pdm init
 
 sudo apt install pre-commit
 pip3 install pre-commit
+```
+Run checks before PR/Commit:
+```
+make format
+make lint
+make codespell
 ```
 
 ## Example

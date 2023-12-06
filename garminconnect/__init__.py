@@ -1,4 +1,4 @@
-"""Python 3 API wrapper for Garmin Connect to get your statistics."""
+"""Python 3 API wrapper for Garmin Connect."""
 
 import logging
 import os
@@ -7,6 +7,7 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Optional
 
 import garth
+from withings_sync import fit
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,9 @@ class Garmin:
         self.password = password
         self.is_cn = is_cn
 
+        self.garmin_connect_user_settings_url = (
+            "/userprofile-service/userprofile/user-settings"
+        )
         self.garmin_connect_devices_url = (
             "/device-service/deviceregistration/devices"
         )
@@ -73,6 +77,11 @@ class Garmin:
         self.garmin_connect_blood_pressure_endpoint = (
             "/bloodpressure-service/bloodpressure/range"
         )
+
+        self.garmin_connect_set_blood_pressure_endpoint = (
+            "/bloodpressure-service/bloodpressure"
+        )
+
         self.garmin_connect_endurance_score_url = (
             "/metrics-service/metrics/endurancescore"
         )
@@ -142,6 +151,10 @@ class Garmin:
         self.garmin_connect_gear = "/gear-service/gear/filterGear"
         self.garmin_connect_gear_baseurl = "/gear-service/gear/"
 
+        self.garmin_request_reload_url = (
+            "/wellness-service/wellness/epoch/request"
+        )
+
         self.garth = garth.Client(
             domain="garmin.cn" if is_cn else "garmin.com"
         )
@@ -168,9 +181,7 @@ class Garmin:
         self.display_name = self.garth.profile["displayName"]
         self.full_name = self.garth.profile["fullName"]
 
-        settings = self.garth.connectapi(
-            "/userprofile-service/userprofile/user-settings"
-        )
+        settings = self.garth.connectapi(self.garmin_connect_user_settings_url)
         self.unit_system = settings["userData"]["measurementSystem"]
 
         return True
@@ -265,6 +276,50 @@ class Garmin:
 
         return self.connectapi(url, params=params)
 
+    def add_body_composition(
+        self,
+        timestamp: Optional[str],
+        weight: float,
+        percent_fat: Optional[float] = None,
+        percent_hydration: Optional[float] = None,
+        visceral_fat_mass: Optional[float] = None,
+        bone_mass: Optional[float] = None,
+        muscle_mass: Optional[float] = None,
+        basal_met: Optional[float] = None,
+        active_met: Optional[float] = None,
+        physique_rating: Optional[float] = None,
+        metabolic_age: Optional[float] = None,
+        visceral_fat_rating: Optional[float] = None,
+        bmi: Optional[float] = None,
+    ):
+        dt = datetime.fromisoformat(timestamp) if timestamp else datetime.now()
+        fitEncoder = fit.FitEncoderWeight()
+        fitEncoder.write_file_info()
+        fitEncoder.write_file_creator()
+        fitEncoder.write_device_info(dt)
+        fitEncoder.write_weight_scale(
+            dt,
+            weight=weight,
+            percent_fat=percent_fat,
+            percent_hydration=percent_hydration,
+            visceral_fat_mass=visceral_fat_mass,
+            bone_mass=bone_mass,
+            muscle_mass=muscle_mass,
+            basal_met=basal_met,
+            active_met=active_met,
+            physique_rating=physique_rating,
+            metabolic_age=metabolic_age,
+            visceral_fat_rating=visceral_fat_rating,
+            bmi=bmi,
+        )
+        fitEncoder.finish()
+
+        url = self.garmin_connect_upload
+        files = {
+            "file": ("body_composition.fit", fitEncoder.getvalue()),
+        }
+        return self.garth.post("connectapi", url, files=files, api=True)
+
     def add_weigh_in(
         self, weight: int, unitKey: str = "kg", timestamp: str = ""
     ):
@@ -354,6 +409,36 @@ class Garmin:
         logger.debug("Requesting body battery data")
 
         return self.connectapi(url, params=params)
+
+    def set_blood_pressure(
+        self,
+        systolic: int,
+        diastolic: int,
+        pulse: int,
+        timestamp: str = "",
+        notes: str = "",
+    ):
+        """
+        Add blood pressure measurement
+        """
+
+        url = f"{self.garmin_connect_set_blood_pressure_endpoint}"
+        dt = datetime.fromisoformat(timestamp) if timestamp else datetime.now()
+        # Apply timezone offset to get UTC/GMT time
+        dtGMT = dt - dt.astimezone().tzinfo.utcoffset(dt)
+        payload = {
+            "measurementTimestampLocal": dt.isoformat()[:22] + ".00",
+            "measurementTimestampGMT": dtGMT.isoformat()[:22] + ".00",
+            "systolic": systolic,
+            "diastolic": diastolic,
+            "pulse": pulse,
+            "sourceType": "MANUAL",
+            "notes": notes,
+        }
+
+        logger.debug("Adding blood pressure")
+
+        return self.garth.post("connectapi", url, json=payload)
 
     def get_blood_pressure(
         self, startdate: str, enddate=None
@@ -678,6 +763,14 @@ class Garmin:
 
         return self.connectapi(url)
 
+    def set_activity_name(self, activity_id, title):
+        """Set name for activity with id."""
+
+        url = f"{self.garmin_connect_activity}/{activity_id}"
+        payload = {"activityId": activity_id, "activityName": title}
+
+        return self.garth.put("connectapi", url, json=payload, api=True)
+
     def get_last_activity(self):
         """Return last activity."""
 
@@ -844,9 +937,7 @@ class Garmin:
             f"{self.garmin_connect_gear_baseurl}{gearUUID}/"
             f"activityType/{activityType}{defaultGearString}"
         )
-        return self.garth.post(
-            "connectapi", url, {"x-http-method-override": method_override}
-        )
+        return self.garth.request(method_override, "connectapi", url, api=True)
 
     class ActivityDownloadFormat(Enum):
         """Activity variables."""
@@ -972,6 +1063,25 @@ class Garmin:
         logger.debug("Requesting gear for activity_id %s", activity_id)
 
         return self.connectapi(url, params=params)
+
+    def get_user_profile(self):
+        """Get all users settings."""
+
+        url = self.garmin_connect_user_settings_url
+        logger.debug("Requesting user profile.")
+
+        return self.connectapi(url)
+
+    def request_reload(self, cdate: str):
+        """
+        Request reload of data for a specific date. This is necessary because
+        Garmin offloads older data.
+        """
+
+        url = f"{self.garmin_request_reload_url}/{cdate}"
+        logger.debug(f"Requesting reload of data for {cdate}.")
+
+        return self.garth.post("connectapi", url, api=True)
 
     def logout(self):
         """Log user out of session."""
